@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quizzer App</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #8360c3, #2ebf91);
+      padding: 40px 20px;
+      margin: 0;
+      color: #333;
+    }
+    .quiz-container {
+      background: white;
+      max-width: 600px;
+      margin: auto;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    .question {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 30px;
+    }
+    .option {
+      display: block;
+      margin: 12px auto;
+      padding: 12px 20px;
+      background: #f0f0f0;
+      border: 2px solid transparent;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 18px;
+      width: 100%;
+      max-width: 400px;
+      transition: all 0.3s ease;
+    }
+    .option:hover {
+      background: #d9e4f5;
+      border-color: #2ebf91;
+    }
+    .correct {
+      background-color: #c8e6c9;
+      border-color: #2ecc71;
+    }
+    .wrong {
+      background-color: #ffcdd2;
+      border-color: #e74c3c;
+    }
+    #nextBtn {
+      margin-top: 30px;
+      padding: 12px 30px;
+      font-size: 18px;
+      background: #2ebf91;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    #nextBtn:hover {
+      background: #249e7a;
+    }
+    #result {
+      font-size: 24px;
+      margin-top: 30px;
+      font-weight: bold;
+      color: #4a4a4a;
+    }
+    #timer {
+      font-size: 18px;
+      margin-bottom: 20px;
+      color: #ff4b5c;
+    }
+    #answerFeedback {
+      margin-top: 10px;
+      font-size: 18px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <div id="timer"></div>
+    <div class="question" id="question"></div>
+    <div id="options"></div>
+    <div id="answerFeedback"></div>
+    <button id="nextBtn" onclick="nextQuestion()">Next</button>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    let quizData = [
+      { question: "What is the capital of France?", options: ["Berlin", "Madrid", "Paris", "London"], answer: "Paris" },
+      { question: "Which language runs in a web browser?", options: ["Java", "C", "Python", "JavaScript"], answer: "JavaScript" },
+      { question: "Who is the Prime Minister of India (2024)?", options: ["Narendra Modi", "Rahul Gandhi", "Amit Shah", "Yogi Adityanath"], answer: "Narendra Modi" },
+      { question: "What is the largest planet in our solar system?", options: ["Mars", "Earth", "Jupiter", "Venus"], answer: "Jupiter" },
+      { question: "Which element has the chemical symbol O?", options: ["Osmium", "Oxygen", "Gold", "Oganesson"], answer: "Oxygen" },
+      { question: "What year did World War II end?", options: ["1940", "1942", "1945", "1950"], answer: "1945" },
+      { question: "Which continent is the Sahara Desert located in?", options: ["Asia", "Africa", "Australia", "Europe"], answer: "Africa" },
+      { question: "What is the square root of 64?", options: ["6", "8", "10", "12"], answer: "8" },
+      { question: "What is the currency of Japan?", options: ["Dollar", "Yen", "Won", "Ruble"], answer: "Yen" },
+      { question: "What gas do plants absorb from the atmosphere?", options: ["Oxygen", "Hydrogen", "Carbon Dioxide", "Nitrogen"], answer: "Carbon Dioxide" },
+      { question: "Which ocean is the largest?", options: ["Atlantic", "Indian", "Pacific", "Arctic"], answer: "Pacific" },
+      { question: "How many continents are there on Earth?", options: ["5", "6", "7", "8"], answer: "7" },
+      { question: "What is H2O more commonly known as?", options: ["Hydrogen Peroxide", "Salt", "Water", "Acid"], answer: "Water" },
+      { question: "Who painted the Mona Lisa?", options: ["Pablo Picasso", "Leonardo da Vinci", "Michelangelo", "Vincent Van Gogh"], answer: "Leonardo da Vinci" },
+      { question: "What is the smallest prime number?", options: ["0", "1", "2", "3"], answer: "2" }
+    ];
+
+    quizData = quizData.sort(() => Math.random() - 0.5);
+
+    let currentQuestion = 0;
+    let score = 0;
+    let timer;
+    let timeLeft = 10;
+    let answered = false;
+
+    function startTimer() {
+      clearInterval(timer);
+      timeLeft = 10;
+      document.getElementById("timer").textContent = `Time left: ${timeLeft}s`;
+      timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById("timer").textContent = `Time left: ${timeLeft}s`;
+        if (timeLeft === 0) {
+          clearInterval(timer);
+          showCorrectAnswer();
+          answered = true;
+        }
+      }, 1000);
+    }
+
+    function loadQuestion() {
+      const q = quizData[currentQuestion];
+      document.getElementById("question").textContent = q.question;
+      const optionsContainer = document.getElementById("options");
+      optionsContainer.innerHTML = "";
+      document.getElementById("answerFeedback").textContent = "";
+
+      q.options.forEach(option => {
+        const btn = document.createElement("button");
+        btn.classList.add("option");
+        btn.textContent = option;
+        btn.onclick = () => {
+          if (!answered) {
+            checkAnswer(option);
+            answered = true;
+          }
+        };
+        optionsContainer.appendChild(btn);
+      });
+
+      startTimer();
+    }
+
+    function checkAnswer(selected) {
+      const correct = quizData[currentQuestion].answer;
+      if (selected === correct) score++;
+      document.querySelectorAll(".option").forEach(btn => {
+        btn.disabled = true;
+        if (btn.textContent === correct) {
+          btn.classList.add("correct");
+        } else if (btn.textContent === selected) {
+          btn.classList.add("wrong");
+        }
+      });
+      clearInterval(timer);
+      document.getElementById("answerFeedback").textContent = `Correct Answer: ${correct}`;
+    }
+
+    function showCorrectAnswer() {
+      const correct = quizData[currentQuestion].answer;
+      document.querySelectorAll(".option").forEach(btn => {
+        btn.disabled = true;
+        if (btn.textContent === correct) {
+          btn.classList.add("correct");
+        }
+      });
+      document.getElementById("answerFeedback").textContent = `Time's up! Correct Answer: ${correct}`;
+    }
+
+    function nextQuestion() {
+      currentQuestion++;
+      answered = false;
+      if (currentQuestion < quizData.length) {
+        loadQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      document.getElementById("question").style.display = "none";
+      document.getElementById("options").style.display = "none";
+      document.getElementById("nextBtn").style.display = "none";
+      document.getElementById("timer").style.display = "none";
+      document.getElementById("answerFeedback").style.display = "none";
+
+      let feedback = "Try Again!";
+      if (score === quizData.length) feedback = "Excellent!";
+      else if (score >= quizData.length / 2) feedback = "Good Job!";
+
+      const resultText = `You scored ${score} out of ${quizData.length}. ${feedback}`;
+      document.getElementById("result").textContent = resultText;
+
+      localStorage.setItem("quizScore", score);
+    }
+
+    loadQuestion();
+  </script>
+</body>
+</html>
